@@ -1,0 +1,512 @@
+vi.1 <- c()
+ri.1 <- c()
+variance.1 <- c()
+len_tests1 <- length(chaintests1$t.id.chain)
+district <- rep(q, len_tests1)
+controlvalues1 <- chaincontrols1$c.values.chain
+for (i in 1:len_tests1){
+z <- which.min(abs(controlvalues1 - chaintests1$t.values.chain[i]))
+variance.1[i] <- (controlvalues1[z] - chaintests1$t.values.chain[i])
+vi.1 <- c(vi.1, chaincontrols1$c.id.chain[z])
+ri.1 <- c(ri.1, z)
+print(paste("For test", toString(i), "our f.control index is", toString(z), "with ID", toString(chaincontrols1$c.id.chain[z])))
+controlvalues1[z] <- 0
+}
+f.controls.1 <- chaincontrols1[ri.1,]
+#RESET controlvalues1
+controlvalues1 <- chaincontrols1$c.values.chain
+b.vi.1 <- c()
+b.ri.1 <- c()
+b.variance.1 <- c()
+for (i in 1:len_tests1){
+z <- which.min(abs(controlvalues1 - chaintests1$t.values.chain[len_tests1 + 1 - i]))
+b.variance.1[i] <- (controlvalues1[z] - chaintests1$t.values.chain[len_tests1 + 1 - i])
+b.vi.1 <- c(b.vi.1, chaincontrols1$c.id.chain[z])
+b.ri.1 <- c(b.ri.1, z)
+print(paste("For test", toString(len_tests1 + 1 - i), "our b.control index is", toString(z), "with ID", toString(chaincontrols1$c.id.chain[z])))
+controlvalues0[z] <- 0
+}
+b.ri.1 <- rev(b.ri.1)
+b.controls.1 <- chaincontrols1[b.ri.1,]
+if (sum(abs(variance.1)) < sum(abs(b.variance.1))){
+add.output_df1 <- data.frame(chaintests1, f.controls.1)
+} else {
+add.output_df1 <- data.frame(chaintests1, b.controls.1)
+}
+print(paste("For Chain IDs not 0: Our forward selection has SAD:", toString(sum(abs(variance.1))),
+"and our backward selection has SAD:", toString(sum(abs(b.variance.1)))))
+print(paste("For Chain IDs not 0: the mean of the tests is", toString(mean(add.output_df1$t.values.chain)), "and the mean of the controls is", toString(mean(mean(add.output_df1$c.values.chain))),
+"with a mean difference of", toString(mean(add.output_df1$c.values.chain) - mean(add.output_df1$t.values.chain))))
+add.output_df1 <- cbind(district, add.output_df1)
+output_df <- rbind(output_df, add.output_df1)
+}
+output_name <- "output.csv" # Replace with the desired name of the output csv file, leave the .csv extension
+raw_controls <- read.csv("melissa_controls.csv", header=TRUE)
+raw_tests <- read.csv("melissa_tests.csv", header=TRUE)
+tests <- raw_tests$Avg.Weekly.Sales.Same.Time.Last.Year          # the values of the tests
+testfactor <- raw_tests$DISTRICT            # the factors of the tests (like region or district)
+testid <- raw_tests$LOC.ID                  #the IDs of the tests
+controls <- raw_controls$Avg.Weekly.Sales.Same.Time.Last.Year    # the values of the controls
+controlfactor <- raw_controls$DISTRICT      # the factors of the controls (like region district)
+controlid <- raw_controls$LOC.ID            # the IDs of the tests
+astertests <- data.frame(testid, testfactor, tests)
+ma
+mastertests <- data.frame(testid, testfactor, tests)
+mastertests
+mastercontrols <- data.frame(controlid, controlfactor, controls)
+mastercontrols
+unique(mastertests$testfactor)
+unique(mastercontrols$controlfactor)
+finaldf <- data.frame(district = character(0), control_id= numeric(0), control_value= numeric(0), test_id= numeric(0),test_value=numeric(0))
+for (q in unique(mastertests$testfactor)){
+a <- mastertests[mastertests$testfactor==q,]; a
+b <- mastercontrols[mastercontrols$controlfactor==q,]; b
+tests <- a$tests
+testid <- a$testid
+controls <- b$controls
+controlid <- b$controlid
+alltests <- data.frame(testid, tests)
+allcontrols <- data.frame(controlid, controls)
+vi <- c()
+ri <- c()
+variance <- c()
+len_tests <- length(tests)
+district <- rep(q, len_tests)
+controlvalues <- controls
+for (i in 1:len_tests){
+z <- which.min(abs(controlvalues - alltests$tests[i]))
+variance[i] <- (controlvalues[z] - alltests$tests[i])
+vi <- c(vi, allcontrols$controlid[z])
+ri <- c(ri, z)
+print(paste("For test", toString(i), "our control index is", toString(z), "with ID", toString(allcontrols$controlid[z])))
+controlvalues[z] <- 0
+}
+f.controls <- allcontrols[ri,]
+controlvalues <- controls; length(controlvalues[controlvalues == 0])
+b.vi <- c()
+b.ri <- c()
+b.vi.values <- c()
+b.variance <- c(); b.variance
+for (i in 1:(len_tests)){
+z <- which.min(abs(controlvalues - alltests$tests[len_tests + 1 - i]))
+b.variance[i] <- (controlvalues[z] - alltests$tests[len_tests + 1 - i])
+b.vi <- c(b.vi, allcontrols$controlid[z])
+b.ri <- c(b.ri, z)
+print(paste("For test", toString(len_tests + 1 - i), "our control index is", toString(z), "with ID", toString(allcontrols$controlid[z])))
+controlvalues[z] <- 0
+}
+b.ri <- rev(b.ri)
+b.controls <- allcontrols[b.ri,]
+if (sum(abs(variance)) < sum(abs(b.variance))){
+final <- data.frame(alltests, f.controls)
+} else {
+final <- data.frame(alltests, b.controls)
+}
+print(paste("Our forward selection has SAD:", toString(sum(abs(variance))),
+"Our backward selection has SAD:", toString(sum(abs(b.variance)))))
+print(paste("For",toString(q),": the mean of the tests is", toString(mean(final$tests)), "and the mean of the controls is", toString(mean(final$controls)),
+"with a mean difference of", toString(mean(final$tests) - mean(final$controls))))
+final <- cbind(district, final)
+finaldf <- rbind(finaldf,final)
+}
+finaldf
+write.csv(finaldf, file = output_name)
+output_name <- "melissa.csv" # Replace with the desired name of the output csv file, leave the .csv extension
+write.csv(finaldf, file = output_name)
+output_name <- "melissa.csv" # Replace with the desired name of the output csv file, leave the .csv extension
+raw_controls <- read.csv("melissa_controls.csv", header=TRUE)
+raw_tests <- read.csv("melissa_tests.csv", header=TRUE)
+tests <- raw_tests$Avg.Weekly.Sales.Same.Time.Last.Year          # the values of the tests
+testfactor <- raw_tests$DISTRICT            # the factors of the tests (like region or district)
+testid <- raw_tests$LOC.ID
+controls <- raw_controls$Avg.Weekly.Sales.Same.Time.Last.Year    # the values of the controls
+controlfactor <- raw_controls$DISTRICT      # the factors of the controls (like region district)
+controlid <- raw_controls$LOC.ID            # the IDs of the tests
+mastertests <- data.frame(testid, testfactor, tests)
+mastertests
+mastercontrols <- data.frame(controlid, controlfactor, controls)
+mastercontrols
+unique(mastertests$testfactor)
+unique(mastercontrols$controlfactor)
+finaldf <- data.frame(district = character(0), control_id= numeric(0), control_value= numeric(0), test_id= numeric(0),test_value=numeric(0))
+for (q in unique(mastertests$testfactor)){
+a <- mastertests[mastertests$testfactor==q,]; a
+b <- mastercontrols[mastercontrols$controlfactor==q,]; b
+tests <- a$tests
+testid <- a$testid
+controls <- b$controls
+controlid <- b$controlid
+alltests <- data.frame(testid, tests)
+allcontrols <- data.frame(controlid, controls)
+vi <- c()
+ri <- c()
+variance <- c()
+len_tests <- length(tests)
+district <- rep(q, len_tests)
+controlvalues <- controls
+for (i in 1:len_tests){
+z <- which.min(abs(controlvalues - alltests$tests[i]))
+variance[i] <- (controlvalues[z] - alltests$tests[i])
+vi <- c(vi, allcontrols$controlid[z])
+ri <- c(ri, z)
+print(paste("For test", toString(i), "our control index is", toString(z), "with ID", toString(allcontrols$controlid[z])))
+controlvalues[z] <- 0
+}
+f.controls <- allcontrols[ri,]
+controlvalues <- controls; length(controlvalues[controlvalues == 0])
+b.vi <- c()
+b.ri <- c()
+b.vi.values <- c()
+b.variance <- c(); b.variance
+for (i in 1:(len_tests)){
+z <- which.min(abs(controlvalues - alltests$tests[len_tests + 1 - i]))
+b.variance[i] <- (controlvalues[z] - alltests$tests[len_tests + 1 - i])
+b.vi <- c(b.vi, allcontrols$controlid[z])
+b.ri <- c(b.ri, z)
+print(paste("For test", toString(len_tests + 1 - i), "our control index is", toString(z), "with ID", toString(allcontrols$controlid[z])))
+controlvalues[z] <- 0
+}
+b.ri <- rev(b.ri)
+b.controls <- allcontrols[b.ri,]
+if (sum(abs(variance)) < sum(abs(b.variance))){
+final <- data.frame(alltests, f.controls)
+} else {
+final <- data.frame(alltests, b.controls)
+}
+print(paste("Our forward selection has SAD:", toString(sum(abs(variance))),
+"Our backward selection has SAD:", toString(sum(abs(b.variance)))))
+print(paste("For",toString(q),": the mean of the tests is", toString(mean(final$tests)), "and the mean of the controls is", toString(mean(final$controls)),
+"with a mean difference of", toString(mean(final$tests) - mean(final$controls))))
+final <- cbind(district, final)
+finaldf <- rbind(finaldf,final)
+}
+finaldf
+write.csv(finaldf, file = output_name)
+ls(pos = "package:northstar")
+?one_factor_search
+?two_factor_search
+?validate
+?subset_dim
+install.packages('caTools',lib='C:/Users/nsun/Documents/R_code/new_packages')
+install.packages('northstar',lib='C:/Users/nsun/Documents/R_code/new_packages')
+R CMD INSTALL northstar
+?install
+??install
+installed.packages
+installed.packages()
+ls(pos = "package:northstar")
+library("northstar")
+ls(pos = "package:northstar")
+remove.packages("northstar")
+ls(pos = "package:northstar")
+installed.packages()
+ls(pos = "package:northstar")
+library("northstar")
+ls(pos = "package:northstar")
+installed.packages()
+ls(pos = "package:northstar")
+install.packages("devtools")
+library("devtools")
+setwd("C:/Users/nsun/Documents/R_code/new_packages")
+install("northstar")
+library("northstar")
+ls(pos = "package:northstar")
+getwd()
+setwd("C:/Users/nsun/Documents/R/Raw CSV Files") # Inside the quotes, put whatever directory the files are in
+output_name <- "holidaystandee_tc.csv" # Replace with desired output name, leave the .csv extension
+raw_tests <- read.csv("holidaystandeetest.csv", header=TRUE)
+raw_controls <- read.csv("holidaystandeecontrol.csv", header=TRUE)
+head(raw_tests); dim(raw_tests)
+colnames(raw_tests)
+head(raw_controls); dim(raw_controls)
+colnames(raw_controls)
+booyah <- one_factor_search(raw_tests, raw_controls)
+tests <- raw_tests$Avg.Weekly.Sales.Pre       # the values of the tests
+testfactor <- raw_tests$DISTRICT          # the factors of the tests (like region or district)
+testid <- raw_tests$LOC.ID                #the IDs of the tests
+controls <- raw_controls$Avg.Weekly.Sales.Pre  # the values of the controls
+controlfactor <- raw_controls$DISTRICT      # the factors of the controls (like region district)
+controlid <- raw_controls$LOC.ID
+mastertests <- data.frame(testid, testfactor, tests)
+head(mastertests)
+mastercontrols <- data.frame(controlid, controlfactor, controls)
+head(mastercontrols)
+unique(mastertests$testfactor)
+unique(mastercontrols$controlfactor)
+finaldf <- data.frame(district = character(0), control_id= numeric(0), control_value= numeric(0), test_id= numeric(0),test_value=numeric(0))
+subset_dim <- data.frame(test_size = numeric(0), control_size = numeric(0))
+for (q in unique(mastertests$testfactor)){
+a <- mastertests[mastertests$testfactor==q,]; a
+b <- mastercontrols[mastercontrols$controlfactor==q,]; b
+tests <- a$tests
+testid <- a$testid
+controls <- b$controls
+controlid <- b$controlid
+alltests <- data.frame(testid, tests)
+allcontrols <- data.frame(controlid, controls)
+add.subset_dim <- c(length(tests), length(controls)); add.subset_dim
+subset_dim <- rbind(subset_dim, add.subset_dim); subset_dim
+ri <- c()
+variance <- c()
+len_tests <- length(tests)
+district <- rep(q, len_tests)
+controlvalues <- controls
+max <- 10*max(controlvalues); max
+for (i in 1:len_tests){
+z <- which.min(abs(controlvalues - alltests$tests[i]))
+variance[i] <- (controlvalues[z] - alltests$tests[i])
+ri <- c(ri, z)
+print(paste("For test", toString(i), "our control index is", toString(z), "with ID", toString(allcontrols$controlid[z])))
+controlvalues[z] <- max
+}
+f.controls <- allcontrols[ri,]
+controlvalues <- controls; length(controlvalues[controlvalues == 0])
+b.ri <- c()
+b.vi.values <- c()
+b.variance <- c(); b.variance
+for (i in 1:(len_tests)){
+z <- which.min(abs(controlvalues - alltests$tests[len_tests + 1 - i]))
+b.variance[i] <- (controlvalues[z] - alltests$tests[len_tests + 1 - i])
+b.ri <- c(b.ri, z)
+print(paste("For test", toString(len_tests + 1 - i), "our control index is", toString(z), "with ID", toString(allcontrols$controlid[z])))
+controlvalues[z] <- max
+}
+b.ri <- rev(b.ri)
+b.controls <- allcontrols[b.ri,]
+if (sum(abs(variance)) < sum(abs(b.variance))){
+final <- data.frame(alltests, f.controls)
+} else {
+final <- data.frame(alltests, b.controls)
+}
+print(paste("Our forward selection has SAD:", toString(sum(abs(variance))),
+"Our backward selection has SAD:", toString(sum(abs(b.variance)))))
+print(paste("For",toString(q),": the mean of the tests is", toString(mean(final$tests)), "and the mean of the controls is", toString(mean(final$controls)),
+"with a mean difference of", toString(mean(final$tests) - mean(final$controls))))
+final <- cbind(district, final)
+finaldf <- rbind(finaldf,final)
+}
+booyah <- one_factor_search(raw_tests, raw_controls)
+subset_dim(raw_tests, raw_controls,1)
+hello <- subset_dim(raw_tests, raw_controls,1)
+sum(hello$`Number of Controls`)
+q <- 4
+a <- mastertests[mastertests$testfactor==q,]; a
+b <- mastercontrols[mastercontrols$controlfactor==q,]; b
+tests <- a$tests
+testid <- a$testid
+controls <- b$controls
+controlid <- b$controlid
+alltests <- data.frame(testid, tests)
+allcontrols <- data.frame(controlid, controls)
+ri <- c()
+variance <- c()
+len_tests <- length(tests)
+district <- rep(q, len_tests)
+controlvalues <- controls
+max <- 10*max(controlvalues); max
+for (i in 1:len_tests){
+z <- which.min(abs(controlvalues - alltests$tests[i]))
+variance[i] <- (controlvalues[z] - alltests$tests[i])
+ri <- c(ri, z)
+print(paste("For test", toString(i), "our control index is", toString(z), "with ID", toString(allcontrols$controlid[z])))
+controlvalues[z] <- max
+}
+tests <- a$tests; dim(tests)
+tests <- a$tests; length(tests)
+tests <- a$tests; dim(a); dim(b)
+q <- 3
+a <- mastertests[mastertests$testfactor==q,]; a
+b <- mastercontrols[mastercontrols$controlfactor==q,]; b
+tests <- a$tests; dim(a); dim(b)
+testid <- a$testid
+controls <- b$controls
+controlid <- b$controlid
+alltests <- data.frame(testid, tests)
+allcontrols <- data.frame(controlid, controls)
+ri <- c()
+variance <- c()
+len_tests <- length(tests)
+district <- rep(q, len_tests)
+controlvalues <- controls
+max <- 10*max(controlvalues); max
+for (i in 1:len_tests){
+z <- which.min(abs(controlvalues - alltests$tests[i]))
+variance[i] <- (controlvalues[z] - alltests$tests[i])
+ri <- c(ri, z)
+print(paste("For test", toString(i), "our control index is", toString(z), "with ID", toString(allcontrols$controlid[z])))
+controlvalues[z] <- max
+}
+q <- 4
+a <- mastertests[mastertests$testfactor==q,]; a
+b <- mastercontrols[mastercontrols$controlfactor==q,]; b
+tests <- a$tests; dim(a); dim(b)
+testid <- a$testid
+controls <- b$controls
+controlid <- b$controlid
+alltests <- data.frame(testid, tests)
+allcontrols <- data.frame(controlid, controls)
+ri <- c()
+variance <- c()
+len_tests <- length(tests)
+district <- rep(q, len_tests)
+controlvalues <- controls
+max <- 10*max(controlvalues); max
+for (i in 1:len_tests){
+z <- which.min(abs(controlvalues - alltests$tests[i]))
+variance[i] <- (controlvalues[z] - alltests$tests[i])
+ri <- c(ri, z)
+print(paste("For test", toString(i), "our control index is", toString(z), "with ID", toString(allcontrols$controlid[z])))
+controlvalues[z] <- max
+}
+alltests$tests[29]
+b <- mastercontrols[mastercontrols$controlfactor==q,]; b
+is.na(b$controls)
+hi <- is.na(b$controls)
+which(hi)
+tests <- a$tests; dim(a); dim(b)
+testid <- a$testid
+controls <- b$controls
+controlid <- b$controlid
+alltests <- data.frame(testid, tests)
+allcontrols <- data.frame(controlid, controls)
+ri <- c()
+variance <- c()
+len_tests <- length(tests)
+district <- rep(q, len_tests)
+controlvalues <- controls
+max <- 10*max(controlvalues); max
+for (i in 1:28){
+z <- which.min(abs(controlvalues - alltests$tests[i]))
+variance[i] <- (controlvalues[z] - alltests$tests[i])
+ri <- c(ri, z)
+print(paste("For test", toString(i), "our control index is", toString(z), "with ID", toString(allcontrols$controlid[z])))
+controlvalues[z] <- max
+}
+controlvalues
+length(controlvalues[controlvalues == 302226.05930])
+z <- which.min(abs(controlvalues - alltests$tests[29]))
+z
+alltests$tests[29]
+a
+raw_tests <- read.csv("holidaystandeetest.csv", header=TRUE)
+raw_controls <- read.csv("holidaystandeecontrol.csv", header=TRUE)
+raw_tests$Avg.Weekly.Sales.Pre
+is.na(raw_tests$Avg.Weekly.Sales.Pre)
+which(is.na(raw_tests$Avg.Weekly.Sales.Pre))
+raw_controls <- read.csv("holidaystandeecontrol.csv", header=TRUE)
+head(raw_tests); dim(raw_tests)
+colnames(raw_tests)
+head(raw_controls); dim(raw_controls)
+colnames(raw_controls)
+booyah <- one_factor_search(raw_tests, raw_controls)
+validate(booyah)
+subset_dim(raw_tests, raw_controls,1)
+setwd("C:/Users/nsun/Documents/R/Found Control Groups")
+write.csv(booyah, output_name)
+raw_controls[raw_controls$LOC.ID == 830372,]
+raw_tests[raw_tests$LOC.ID == 313268,]
+raw_tests[,-1]
+head(raw_tests); dim(raw_tests)
+dim(raw_tests)
+dim(raw_tests)[2]
+check <- is.na(raw_tests[,3])
+check
+check[check == TRUE]
+length(check[check == TRUE] == 0)
+check
+check[222] <- TRUE
+if (length(check[check == TRUE] == 0)){
+print("There are no NA values in this data.")
+} else {
+print("There are NA values present in this data located at the following: ")
+}
+check[222]
+length(check[check == TRUE])
+if (length(check[check == TRUE] == 0)){
+print("There are no NA values in this data.")
+} else {
+print("There are NA values present in this data located at the following: ")
+}
+length(check[check == TRUE])
+(length(check[check == TRUE] == 0))
+if (length(check[check == TRUE]) == 0) {
+print("There are no NA values in this data.")
+} else {
+print("There are NA values present in this data located at the following: ")
+which(check)
+}
+find_na <- function (raw_tests) {
+if (dim(raw_tests)[2] == 3){
+target <- raw_tests[,3]
+check <- is.na(raw_tests[,3])
+if (length(check[check == TRUE]) == 0) {
+print("There are no NA values in this data.")
+} else {
+print("There are NA values present in this data located at the following: ")
+which(check)
+}
+} else if (dim(raw_tests)[2] == 4){
+target <- raw_tests[,4]
+check <- is.na(raw_tests[,4])
+if (length(check[check == TRUE]) == 0) {
+print("There are no NA values in this data.")
+} else {
+print("There are NA values present in this data located at the following: ")
+which(check)
+}
+} else {
+print("Too many columns; recheck your data")
+}
+}
+find_na(raw_tests)
+head(raw_tests)
+(dim(raw_tests)[2] == 3)
+(raw_tests[,3])
+if (length(check[check == TRUE]) == 0) {
+print("There are no NA values in this data.")
+} else {
+print("There are NA values present in this data located at the following: ")
+which(check)
+}
+find_na(raw_tests)
+check <- is.na(raw_tests[,3])
+check
+which(check)
+raw_tests[222,3] <- NA
+check <- is.na(raw_tests[,3])
+if (length(check[check == TRUE]) == 0) {
+print("There are no NA values in this data.")
+} else {
+print("There are NA values present in this data located at the following: ")
+which(check)
+}
+raw_tests[112,3] <- NA
+if (length(check[check == TRUE]) == 0) {
+print("There are no NA values in this data.")
+} else {
+print("There are NA values present in this data located at the following: ")
+which(check)
+}
+check <- is.na(raw_tests[,3])
+if (length(check[check == TRUE]) == 0) {
+print("There are no NA values in this data.")
+} else {
+print("There are NA values present in this data located at the following: ")
+which(check)
+}
+find_na(raw_tests)
+raw_tests <- read.csv("holidaystandeetest.csv", header=TRUE)
+setwd("C:/Users/nsun/Documents/R/Raw CSV Files") # Inside the quotes, put whatever directory the files are in
+raw_tests <- read.csv("holidaystandeetest.csv", header=TRUE)
+find_na(raw_tests)
+raw_tests[222,3] <- NA
+raw_tests[212,3] <- NA
+raw_tests[112,3] <- NA
+find_na(raw_tests)
+setwd("C:/Users/nsun/Documents/R_code/new_packages")
+setwd("./northstar")
+document()
+install("northstar")
+library("northstar")
+ls(pos = "package:northstar")
+?find_na

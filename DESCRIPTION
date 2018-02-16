@@ -1,0 +1,10 @@
+Package: northstar
+Title: northstar
+Version: 0.0.0.9000
+Authors@R: person("Nick", "Sun", email = "nicholas.sun@rutgers.edu", role = c("aut", "cre"))
+Description: Making Hinna and Melissa's jobs a tiny bit easier
+Depends:
+    R (>= 3.2.2)
+License: GPL (version 2 or later)
+LazyData: true
+RoxygenNote: 5.0.1.9000
